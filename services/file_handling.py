@@ -6,7 +6,8 @@ logger = logging.getLogger(__name__)
 
 # Функция, возвращающая строку с текстом страницы и её размер
 def _get_part_text(text: str, start: int, page_size: int) -> tuple[str, int]:
-    end_signs = ",.!:;?"
+    end_signs = ".!?"
+    forbidden = [" т.", "т.е.", "т. е.", "и т.д.", "и т.п.", "т.к.", "т. к."]  # ← список расширяемый
     max_end = min(len(text), start + page_size)
     chunk = text[start:max_end]
 
@@ -14,6 +15,24 @@ def _get_part_text(text: str, start: int, page_size: int) -> tuple[str, int]:
     i = 0
     while i < len(chunk):
         if chunk[i] in end_signs:
+             # --- ПРОВЕРКА НА ЗАПРЕЩЁННЫЕ АББРЕВИАТУРЫ ---
+            if chunk[i] == '.':
+                for abbr in forbidden:
+                    L = len(abbr)
+
+                    # Проверяем, попадает ли найденная точка внутрь аббревиатуры
+                    start_pos = i - (L - 1)
+                    if start_pos >= 0 and chunk[start_pos:i+1] == abbr:
+                        i += 1
+                        break
+                else:
+                    pass  # если не нашли аббревиатуру — продолжаем обычную логику
+                # если нашли — цикл for выполнил break и мы должны continue
+                if chunk[i-1] == '.':
+                    continue
+            # --- КОНЕЦ ПРОВЕРКИ ---
+
+            # Обработка последовательности . ! ?
             while i + 1 < len(chunk) and chunk[i + 1] in end_signs:
                 i += 1
             seq_end = i
