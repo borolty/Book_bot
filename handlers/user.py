@@ -36,6 +36,11 @@ async def process_start_command(message: Message, db: dict):
 async def process_help_command(message: Message):
     await message.answer(LEXICON[message.text])
 
+# Этот хэндлер будет срабатывать на команду "/contents"
+# и отправлять пользователю сообщение со списком доступных команд в боте
+@user_router.message(Command(commands="contents"))
+async def process_contents_command(message: Message):
+    await message.answer(LEXICON[message.text])
 
 # Этот хэндлер будет срабатывать на команду "/beginning"
 # и отправлять пользователю первую страницу книги с кнопками пагинации
