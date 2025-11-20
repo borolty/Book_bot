@@ -24,6 +24,13 @@ button_start_in = InlineKeyboardButton(
 # Создаем объект инлайн-клавиатуры
 keyboard_in = InlineKeyboardMarkup(inline_keyboard=[[button_start_in]])
 
+# Матрешка - создание кнопок и создание клавиатуры
+continue_kb = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [InlineKeyboardButton(text=LEXICON["Сontinue_reading"], callback_data="continue_reading")]
+            ]
+        )
+
 # Функция, генерирующая содержание на нескольких страницах
 def paginate(text: str, page_size: int = 1250) -> list[str]:
     pages = []

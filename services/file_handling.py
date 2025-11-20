@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 def _get_part_text(text: str, start: int, page_size: int) -> tuple[str, int]:
     end_signs = ".!?"
     forbidden = [" т.", "т.е.", "т. е.", "и т.д.", "и т.п.", "т.к.", "т. к.", ". М. В.",
-                "1.", "2.", "3.", "4.", "5.", "6.", "7.", "8.", "9.", "10."]  # ← список расширяемый
+                "1.", "2.", "3.", "4.", "5.", "6.", "7.", "8.", "9.", "0."]  # ← список расширяемый
     max_end = min(len(text), start + page_size)
     chunk = text[start:max_end]
 

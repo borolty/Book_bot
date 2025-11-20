@@ -9,7 +9,8 @@ from handlers.other import other_router
 from handlers.user import user_router
 from keyboards.menu_commands import set_main_menu
 from services.file_handling import prepare_book
-from database.database import init_db
+#from database.database import init_db
+from database.database import db
 
 # Инициализируем логгер
 logger = logging.getLogger(__name__)
@@ -41,7 +42,8 @@ async def main():
     logger.info("The book is uploaded. Total pages: %d", len(book))
 
 # Инициализируем "базу данных"
-    db: dict = init_db()
+#    db: dict = init_db()
+
 
 # Сохраняем готовую книгу и "базу данных" в `workflow_data`
     dp.workflow_data.update(book=book, db=db)
