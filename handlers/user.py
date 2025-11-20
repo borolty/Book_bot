@@ -5,7 +5,7 @@ from aiogram.types import CallbackQuery, Message
 from aiogram.filters import Command, CommandStart
 from filters.filters import IsDelBookmarkCallbackData, IsDigitCallbackData
 from keyboards.bookmarks_kb import create_bookmarks_keyboard, create_edit_keyboard
-from keyboards.pagination_kb import create_pagination_keyboard, keyboard_in
+from keyboards.pagination_kb import create_pagination_keyboard, keyboard_in, paginate
 from lexicon.lexicon import LEXICON
 
 #from keyboards.keyboards import game_kb, yes_no_kb
@@ -36,11 +36,19 @@ async def process_start_command(message: Message, db: dict):
 async def process_help_command(message: Message):
     await message.answer(LEXICON[message.text])
 
+
+
 # Этот хэндлер будет срабатывать на команду "/contents"
 # и отправлять пользователю сообщение со списком доступных команд в боте
 @user_router.message(Command(commands="contents"))
 async def process_contents_command(message: Message):
-    await message.answer(LEXICON[message.text])
+    text = LEXICON[message.text]   # длинный текст
+
+    pages = paginate(text)         # разбиваем на части
+
+    for page in pages:
+        await message.answer(page)
+
 
 # Этот хэндлер будет срабатывать на команду "/beginning"
 # и отправлять пользователю первую страницу книги с кнопками пагинации
@@ -74,11 +82,7 @@ async def process_button_start_in_click(callback: CallbackQuery, book: dict, db:
             ),
         )
         await callback.answer()
-    #    await callback.answer()
-   # ):
-   # await callback.message.edit_text(
-   #     text='Была нажата КНОПКА 1',
-    #    reply_markup=callback.message.reply_markup)
+
 
 # Этот хэндлер будет срабатывать на команду "/continue"
 # и отправлять пользователю страницу книги, на которой пользователь

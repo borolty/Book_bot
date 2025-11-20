@@ -24,6 +24,17 @@ button_start_in = InlineKeyboardButton(
 # Создаем объект инлайн-клавиатуры
 keyboard_in = InlineKeyboardMarkup(inline_keyboard=[[button_start_in]])
 
+# Функция, генерирующая содержание на нескольких страницах
+def paginate(text: str, page_size: int = 1250) -> list[str]:
+    pages = []
+    while len(text) > page_size:
+        split_pos = text.rfind("\n", 0, page_size)
+        if split_pos == -1:
+            split_pos = page_size
+        pages.append(text[:split_pos])
+        text = text[split_pos:].lstrip()
+    pages.append(text)
+    return pages
 
 # Функция, генерирующая клавиатуру для страницы книги
 def create_pagination_keyboard(*buttons: str) -> InlineKeyboardMarkup:
