@@ -204,16 +204,16 @@ async def process_page_press(callback: CallbackQuery):
 @user_router.callback_query(IsDigitCallbackData())
 async def process_bookmark_press(callback: CallbackQuery, book: dict):
     user_id = str(callback.from_user.id)
-    page = int(callback.data)
+    bookmarks = int(callback.data)
 
-    db["users"][user_id]["page"] = page
+    db["users"][user_id]["page"] = bookmarks
     save_all_users(db["users"])
 
     await callback.message.edit_text(
-        text=book[page],
+        text=book[bookmarks],
         reply_markup=create_pagination_keyboard(
             "backward",
-            f"{page}/{len(book)-1}",
+            f"{bookmarks}/{len(book)-1}",
             "forward",
         ),
     )
