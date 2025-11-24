@@ -8,6 +8,7 @@ from keyboards.pagination_kb import create_pagination_keyboard, paginate, keyboa
 from filters.filters import IsDelBookmarkCallbackData, IsDigitCallbackData
 from lexicon.lexicon import LEXICON
 
+
 # ← Вот тут подключаем JSON-базу
 from database.database import db, save_all_users
 
@@ -74,8 +75,8 @@ async def process_beginning_command(message: Message, book: dict):
     )
 
 
-# ---------- кнопка "Start read3" ----------
-@user_router.callback_query(F.data == "Start read3")
+# ---------- кнопка "start reading" ----------
+@user_router.callback_query(F.data == "start_reading")
 async def process_button_start_in_click(callback: CallbackQuery, book: dict):
     user_id = str(callback.from_user.id)
 
@@ -93,6 +94,7 @@ async def process_button_start_in_click(callback: CallbackQuery, book: dict):
     )
     await callback.answer()
 
+# ---------- кнопка "continue_reading" ----------
 @user_router.callback_query(F.data == "continue_reading")
 async def continue_reading(callback: CallbackQuery, book: dict):
     user_id = str(callback.from_user.id)
@@ -202,16 +204,16 @@ async def process_page_press(callback: CallbackQuery):
 @user_router.callback_query(IsDigitCallbackData())
 async def process_bookmark_press(callback: CallbackQuery, book: dict):
     user_id = str(callback.from_user.id)
-    page = int(callback.data)
+    bookmarks = int(callback.data)
 
-    db["users"][user_id]["page"] = page
+    db["users"][user_id]["page"] = bookmarks
     save_all_users(db["users"])
 
     await callback.message.edit_text(
-        text=book[page],
+        text=book[bookmarks],
         reply_markup=create_pagination_keyboard(
             "backward",
-            f"{page}/{len(book)-1}",
+            f"{bookmarks}/{len(book)-1}",
             "forward",
         ),
     )
@@ -253,122 +255,3 @@ async def process_del_bookmark_press(callback: CallbackQuery, book: dict):
         )
     else:
         await callback.message.edit_text(text=LEXICON["no_bookmarks"])
-
-
-
-# Этот хэндлер срабатывает на команду /start
-#@user_router.message(CommandStart())
-#async def process_start_command(message: Message):
-#    await message.answer(text=LEXICON_RU["/start"], reply_markup=yes_no_kb)
-
-
-# Этот хэндлер срабатывает на команду /help
-#@user_router.message(Command(commands="help"))
-#async def process_help_command(message: Message):
-#    await message.answer(text=LEXICON_RU["/help"], reply_markup=yes_no_kb)
-
-
-# Этот хэндлер срабатывает на согласие пользователя играть в игру
-#@user_router.message(F.text == LEXICON_RU["yes_button"])
-#async def process_yes_answer(message: Message):
-#    await message.answer(text=LEXICON_RU["yes"], reply_markup=game_kb)
-
-
-# Этот хэндлер срабатывает на отказ пользователя играть в игру
-#@user_router.message(F.text == LEXICON_RU["no_button"])
-#async def process_no_answer(message: Message):
-#    await message.answer(text=LEXICON_RU["no"])
-
-
-# Этот хэндлер срабатывает на любую из игровых кнопок
-#@user_router.message(
-#    F.text.in_([LEXICON_RU["rock"], LEXICON_RU["paper"], LEXICON_RU["scissors"]]))
-#async def process_game_button(message: Message):
-#    bot_choice = get_bot_choice()
-#    await message.answer(text=f"{LEXICON_RU['bot_choice']} - {LEXICON_RU[bot_choice]}")
-#    winner = get_winner(message.text, bot_choice)
-
-#    if winner == "user_won":
-#        message_effect_id = "5046509860389126442"
-#    else:
-#        message_effect_id = None
-
-#    await message.answer(
-#        text=LEXICON_RU[winner],
-#        message_effect_id=message_effect_id,
-#        reply_markup=yes_no_kb,)
-
-# Количество вопросов, доступных пользователю в игре
-#ATTEMPTS = 135
-
-# Словарь, в котором будут храниться данные пользователя
-#users = {}
-
-
-
-# Собственный фильтр, проверяющий юзера на админа
-#class IsAdmin(BaseFilter):
-#    def __init__(self, admin_ids: list[int]) -> None:
-#        # В качестве параметра фильтр принимает список с целыми числами
-#        self.admin_ids = admin_ids
-
-#    async def __call__(self, message: Message) -> bool:
-#       return message.from_user.id in self.admin_ids
-
-# Этот хэндлер будет срабатывать, если апдейт от админа
-#@router.message(IsAdmin(admin_ids))
-#async def answer_if_admins_update(message: Message):
-#    await message.answer(text='Вы админ')
-
-
-# Этот хэндлер будет срабатывать, если апдейт не от админа
-#@router.message()
-#async def answer_if_not_admins_update(message: Message):
-#    await message.answer(text='Вы не админ')
-
-
-
-# Этот хэндлер будет срабатывать на блокировку бота пользователем
-#@router.my_chat_member(ChatMemberUpdatedFilter(member_status_changed=KICKED))
-#async def process_user_blocked_bot(event: ChatMemberUpdated):
-#   print(f'Пользователь {event.from_user.id} заблокировал бота')
-
-
-    # Если пользователь только запустил бота и его нет в словаре '
-    # 'users - добавляем его в словарь (добавляем после хандлера Старт)
-    #if message.from_user.id not in users:
-     #   users[message.from_user.id] = {
-     #       'in_game': False,
-     #       'value_number': None,
-     #       'attempts': None,
-     #       'total_values': 0,
-     #       'wins': 0   }
-
-
-
-# Этот хэндлер будет срабатывать на команду "/continue"
-#@router.message(Command(commands="continue"))
-#async def process_continue_command(message: Message):
-#    await message.answer(
-#        f'Вы остановились на вопросе: '
-#        f'{users[message.from_user.id]["total_values"]}\n'
-        #f'Игр выиграно: {users[message.from_user.id]["wins"]}'
-#         f'\nПродолжим?'   )
-
-
-# Этот хэндлер будет срабатывать на команду "/subscribe"
-#@router.message(Command(commands="subscribe"))
-#async def process_subscribe_command(message: Message):
- #   await message.answer(
- #       'Подпишись чтобы не забыть о проекте познания своего мира' )
-
-
-# Этот хэндлер будет срабатывать на любые ваши текстовые сообщения,
-# кроме приведенных команд
-#@router.message()
-#async def send_echo(message: Message):
- #   await message.reply(text=message.text)
-
-
-#if __name__ == '__main__':
- #   dp.run_polling(bot)

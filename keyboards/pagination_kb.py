@@ -18,7 +18,7 @@ from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
 # Создаем объекты инлайн-кнопок
 button_start_in = InlineKeyboardButton(
-    text=LEXICON["Start read"], callback_data="Start read3"
+    text=LEXICON["Start_reading"], callback_data="start_reading"
 )
 
 # Создаем объект инлайн-клавиатуры

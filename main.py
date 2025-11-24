@@ -80,7 +80,7 @@ if __name__ == "__main__":
 #storage = ...
 
 # Вместо BOT TOKEN HERE нужно вставить токен вашего бота, полученный у @BotFather
-#BOT_TOKEN = '8368878470:AAHodapW6XrrDhfr9clYMawpTtIQ0-W9RhM'
+#BOT_TOKEN = '_________:_____________________________-_____'
 
 #config: Config = load_config('.env')
 
