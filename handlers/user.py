@@ -9,7 +9,7 @@ from filters.filters import IsDelBookmarkCallbackData, IsDigitCallbackData
 from lexicon.lexicon import LEXICON
 
 
-# подключаем JSON-базу
+# ← Вот тут подключаем JSON-базу
 from database.database import db, save_all_users
 
 
@@ -147,10 +147,10 @@ async def process_bookmarks_command(message: Message, book: dict):
 @user_router.callback_query(F.data == "forward")
 async def process_forward_press(callback: CallbackQuery, book: dict):
     user_id = str(callback.from_user.id)
-    page = db["users"][user_id]["page"]
+    current_page = db["users"][user_id]["page"]
 
-    if page < len(book):
-        new_page = page + 1
+    if current_page < len(book):
+        new_page = current_page + 1
         db["users"][user_id]["page"] = new_page
         save_all_users(db["users"])
 
@@ -169,10 +169,10 @@ async def process_forward_press(callback: CallbackQuery, book: dict):
 @user_router.callback_query(F.data == "backward")
 async def process_backward_press(callback: CallbackQuery, book: dict):
     user_id = str(callback.from_user.id)
-    page = db["users"][user_id]["page"]
+    current_page = db["users"][user_id]["page"]
 
-    if page > 1:
-        new_page = page - 1
+    if current_page > 1:
+        new_page = current_page - 1
         db["users"][user_id]["page"] = new_page
         save_all_users(db["users"])
 
@@ -204,16 +204,16 @@ async def process_page_press(callback: CallbackQuery):
 @user_router.callback_query(IsDigitCallbackData())
 async def process_bookmark_press(callback: CallbackQuery, book: dict):
     user_id = str(callback.from_user.id)
-    bookmarks = int(callback.data)
+    page = int(callback.data)
 
-    db["users"][user_id]["page"] = bookmarks
+    db["users"][user_id]["page"] = page
     save_all_users(db["users"])
 
     await callback.message.edit_text(
-        text=book[bookmarks],
+        text=book[page],
         reply_markup=create_pagination_keyboard(
             "backward",
-            f"{bookmarks}/{len(book)-1}",
+            f"{page}/{len(book)-1}",
             "forward",
         ),
     )
