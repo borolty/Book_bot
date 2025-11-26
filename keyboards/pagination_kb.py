@@ -17,8 +17,12 @@ from aiogram.utils.keyboard import ReplyKeyboardBuilder
 #    one_time_keyboard=True, resize_keyboard=True)
 
 # Создаем объекты инлайн-кнопок
+# button_start_in = InlineKeyboardButton(
+#     text=LEXICON["Start_reading"], callback_data="start_reading"
+# )
+
 button_start_in = InlineKeyboardButton(
-    text=LEXICON["Start_reading"], callback_data="start_reading"
+    text=LEXICON["Book_selection"], callback_data="Book_selection"
 )
 
 # Создаем объект инлайн-клавиатуры
@@ -59,3 +63,10 @@ def create_pagination_keyboard(*buttons: str) -> InlineKeyboardMarkup:
     )
     # Возвращаем объект инлайн-клавиатуры
     return kb_builder.as_markup()
+
+# Возвращаем объекты инлайн-клавиатуры "◀️ Предыдующая страница_Следующая страница ▶"
+def post_keyboard():
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="◀ Назад", callback_data="previous_post"),
+         InlineKeyboardButton(text="Вперёд ▶", callback_data="next_post")]
+    ])

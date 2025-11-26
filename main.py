@@ -12,6 +12,8 @@ from services.file_handling import prepare_book
 #from database.database import init_db
 from database.database import db
 
+
+
 # Инициализируем логгер
 logger = logging.getLogger(__name__)
 
@@ -54,6 +56,7 @@ async def main():
     # Регистриуем роутеры в диспетчере
     dp.include_router(user_router)
     dp.include_router(other_router)
+    #dp.include_router(channel_reader_router)
 
     # Пропускаем накопившиеся апдейты и запускаем polling
     await bot.delete_webhook(drop_pending_updates=True)

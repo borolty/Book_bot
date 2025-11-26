@@ -1,20 +1,134 @@
 from copy import deepcopy
-from aiogram import F, Router
+from aiogram import F, Router, types
 from aiogram.types import CallbackQuery, Message
 from aiogram.filters import Command, CommandStart
 
 from keyboards.bookmarks_kb import create_bookmarks_keyboard, create_edit_keyboard
-from keyboards.pagination_kb import create_pagination_keyboard, paginate, keyboard_in, continue_kb
+from keyboards.pagination_kb import create_pagination_keyboard, paginate, keyboard_in, continue_kb, post_keyboard
 from filters.filters import IsDelBookmarkCallbackData, IsDigitCallbackData
 from lexicon.lexicon import LEXICON
 
-
 # подключаем JSON-базу
 from database.database import db, save_all_users
+from database.db_channel import get_user_state, set_current_post, push_history, pop_history
 
+CHANNEL = "@rechelove"
+FIRST_POST = 29
+MAX_POST_ID = 3000
 
 user_router = Router()
 
+
+# Используйте Command() с аргументом commands (в виде списка)
+@user_router.message(Command(commands=["start_posts"]))
+async def process_start_posts(message: types.Message, bot):
+    # Ваш код обработчика здесь
+    #await message.reply("Обработка команды start_posts")
+    user = get_user_state(message.from_user.id)
+    user["current_post"] = FIRST_POST
+    user["history"] = []
+    set_current_post(message.from_user.id, FIRST_POST)
+
+    await bot.forward_message(
+        chat_id=message.from_user.id,
+        from_chat_id=CHANNEL,
+        message_id=FIRST_POST
+        )
+
+    set_current_post(message.from_user.id, FIRST_POST + 1)
+
+    await message.answer(
+        "Приятного чтения!",
+        reply_markup=post_keyboard()
+    )
+
+    # ------------------- NEXT POST ------------------------
+@user_router.callback_query(F.data == "next_post")
+async def next_post(callback: CallbackQuery, bot):
+
+    #user = get_user_state(callback.from_user.id) - одной строкой две следущ строки
+    user_id = callback.from_user.id
+    user = get_user_state(user_id)
+
+    post_id = user["current_post"]
+
+    # На случай, если вышли за пределы канала
+    if post_id > MAX_POST_ID:
+        await callback.answer("Поздравляем, вы дочитали книгу!")
+        return
+
+    try:
+        # Пробуем отправить пост
+        await bot.forward_message(
+            chat_id=user_id, #callback.from_user.id,
+            from_chat_id=CHANNEL,
+            message_id=post_id
+        )
+
+        # Сохраняем историю
+        push_history(user_id, post_id)
+
+        # Увеличиваем номер поста
+        set_current_post(user_id, post_id + 1)
+    #set_current_post(callback.from_user.id, post_id + 1)
+
+        # Обновляем кнопки
+        await callback.message.answer(
+            f"Страница_{post_id}",
+            reply_markup=post_keyboard()
+        )
+
+        await callback.answer()
+
+    except: #Exception as e:
+        # Пост может быть удалён → просто прыгаем к следующему
+        set_current_post(user_id, post_id + 1)
+        await callback.answer(f"Пост {post_id} недоступен, пропускаю...")
+
+    # ------------------- PREVIOUS POST ------------------------
+@user_router.callback_query(F.data == "previous_post")
+async def previous_post(callback: CallbackQuery, bot):
+
+    #user = get_user_state(callback.from_user.id)
+    user_id = callback.from_user.id
+    user = get_user_state(user_id)
+
+    prev_id = pop_history(user_id)
+    #post_id = user["current_post"]
+
+    # На случай, если вышли за пределы канала
+    if prev_id is None:
+        await callback.answer("Вы на первой странице.")
+        return
+
+    try:
+        # Пробуем отправить пост
+        await bot.forward_message(
+            chat_id=user_id, #callback.from_user.id,
+            from_chat_id=CHANNEL,
+            message_id=prev_id
+        )
+
+        # Обновляем текущий
+        current = user["current_post"]
+        set_current_post(user_id, prev_id)
+
+        # текущий пост (который мы сейчас покинули) должен уйти в историю
+        # но ТОЛЬКО если он не совпадает с prev_id (чтобы не было дублей)
+        if current != prev_id:
+            push_history(user_id, current)
+
+        # Обновляем кнопки
+        await callback.message.answer(
+            f"Страница_{prev_id}",
+            reply_markup=post_keyboard()
+        )
+
+        await callback.answer()
+
+    except:
+
+        await callback.answer("Этот пост недоступен.")
 
 # ---------- /start ----------
 @user_router.message(CommandStart())
@@ -37,7 +151,10 @@ async def process_start_command(message: Message):
             reply_markup=continue_kb
         )
 
-
+# ---------- /book_selection ----------
+@user_router.message(Command(commands="book_selection"))
+async def process_book_selection_command(message: Message):
+    await message.answer(LEXICON[message.text])
 
 # ---------- /help ----------
 @user_router.message(Command(commands="help"))
@@ -74,6 +191,15 @@ async def process_beginning_command(message: Message, book: dict):
         ),
     )
 
+# ---------- кнопка "Book_selection" ----------
+@user_router.callback_query(F.data == "Book_selection")
+async def process_button_start_in_click(callback: CallbackQuery):
+
+    await callback.message.edit_text(
+        text=LEXICON["/book_selection"],
+        #reply_markup=create_pagination_keyboard(),
+    )
+    await callback.answer()
 
 # ---------- кнопка "start reading" ----------
 @user_router.callback_query(F.data == "start_reading")
